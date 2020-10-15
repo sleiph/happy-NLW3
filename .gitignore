@@ -1,0 +1,7 @@
+# dependencias
+Apostila-NLW.pdf
+/backend/node_modules
+/mobile/node_modules
+/web/node_modules
+/web/.gitignore
+/web/README.md
