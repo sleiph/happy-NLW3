@@ -1,17 +1,37 @@
-import React from 'react'
-import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import React, { useState } from 'react'
+import { Dimensions, StyleSheet, Text, View } from 'react-native'
 import MapView, { Callout, Marker, PROVIDER_GOOGLE } from 'react-native-maps'
-import { useNavigation } from '@react-navigation/native'
+import { useNavigation, useFocusEffect } from '@react-navigation/native'
 
+import { RectButton } from 'react-native-gesture-handler'
 import { Feather } from '@expo/vector-icons'
 
+import api from '../services/api'
 import mapMarker from '../../assets/map-marker.png'
 
+interface Orfanato {
+    id: number
+    name: string
+    latitude: number
+    longitude: number
+}
+
 export default function OrfanatosMap() {
+    const [ orfanatos, setOrfanatos] = useState<Orfanato[]>([])
     const navigation = useNavigation()
 
-    function handleNavigateToOrfanatoDetails() {
-        navigation.navigate('OrfanatoDetails')
+    useFocusEffect(() => {
+        api.get('orfanatos').then(response => {
+            setOrfanatos(response.data)
+        })
+    })
+
+    function handleNavigateToOrfanatoDetails(id: number) {
+        navigation.navigate('OrfanatoDetails', { id } )
+    }
+
+    function handleNavitageToCreateOrfanato() {
+        navigation.navigate('SelectMapPosition')
     }
 
     return (
@@ -22,35 +42,40 @@ export default function OrfanatosMap() {
                 initialRegion={{
                     latitude: -23.4536,
                     longitude: -46.5336,
-                    latitudeDelta: 0.02,
-                    longitudeDelta: 0.02
+                    latitudeDelta: 0.038,
+                    longitudeDelta: 0.038
                 }}
             >
-                <Marker
-                    icon={mapMarker}
-                    calloutAnchor={{
-                        x: 2.7,
-                        y: 0.8,
-                    }}
-                    coordinate={{
-                        latitude: -23.4536,
-                        longitude: -46.5336
-                    }}
-                >
-                    <Callout tooltip onPress={handleNavigateToOrfanatoDetails}>
-                        <View style={styles.calloutContainer}>
-                            <Text style={styles.calloutText}>Lar das meninas</Text>
-                        </View>
-                    </Callout>
-                </Marker>
+                {orfanatos.map(orfanato => {
+                    return(
+                        <Marker
+                            key={orfanato.id}
+                            icon={mapMarker}
+                            calloutAnchor={{
+                                x: 2.7,
+                                y: 0.8,
+                            }}
+                            coordinate={{
+                                latitude: orfanato.latitude,
+                                longitude: orfanato.longitude
+                            }}
+                        >
+                            <Callout tooltip onPress={() => handleNavigateToOrfanatoDetails(orfanato.id)}>
+                                <View style={styles.calloutContainer}>
+                                    <Text style={styles.calloutText}>{orfanato.name}</Text>
+                                </View>
+                            </Callout>
+                        </Marker>
+                    )
+                })}
             </MapView>
 
             <View style={styles.footer}>
-                <Text style={styles.footerText}>2 orfanatos encontrados</Text>
+                <Text style={styles.footerText}>{orfanatos.length} orfanatos encontrados</Text>
 
-                <TouchableOpacity style={styles.createOrfanatoButton} onPress={() => {}}>
+                <RectButton style={styles.createOrfanatoButton} onPress={handleNavitageToCreateOrfanato}>
                     <Feather name="plus" size={20} color="#fff" />
-                </TouchableOpacity>
+                </RectButton>
             </View>
         </View>
     )
